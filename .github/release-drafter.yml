@@ -1,3 +1,7 @@
+categories:
+    - title: 'Dependency Updates'
+      labels:
+        - 'dependencies'
 template: |
   ## What’s Changed
 
