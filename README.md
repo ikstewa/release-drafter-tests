@@ -6,3 +6,5 @@ Changing stuff
 Changing stuff with PR.
 
 Changing stuff with PR again.
+
+Adding a change to master.
