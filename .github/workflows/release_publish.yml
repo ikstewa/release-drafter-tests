@@ -1,12 +1,12 @@
-name: Update Release Draft
+name: Publish Release
 
 on:
   workflow_dispatch:
 
 jobs:
 
-  draft_release:
-    name: Update Release Notes
+  publish_release:
+    name: Publish Release Notes
     runs-on: ubuntu-latest
     steps:
       - id: short_sha
@@ -14,8 +14,9 @@ jobs:
 
       - uses: release-drafter/release-drafter@v5
         with:
+          name: ${{ env.short_sha }}
           tag: 'master-${{ env.short_sha }}'
           version: ${{ env.short_sha }}
-          publish: false
+          publish: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
