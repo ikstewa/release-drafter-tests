@@ -1,0 +1,56 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+
+jobs:
+
+  create_deployment:
+    name: Create Deployment
+    runs-on: ubuntu-latest
+    steps:
+      - uses: chrnorm/deployment-action@releases/v1
+        name: Create GitHub deployment
+        id: deployment
+        with:
+          # One of: error, failure, inactive, in_progress, queued, pending, or success
+          initial_status: pending
+          token: "${{ github.token }}"
+          target_url: "http://my.logs.com"
+          description: "Testing my deployment"
+          ref: ${{ github.head_ref }}
+          environment: production
+
+  do_deployment:
+    name: Deploy Production
+    needs: create_deployment
+    runs-on: ubuntu-latest
+    environment: require_approval
+    steps:
+      - name: Update deployment status (success)
+        uses: chrnorm/deployment-status@releases/v1
+        with:
+          state: in_progress
+          token: "${{ github.token }}"
+          log_url: "http://my.logs.com"
+          description: "Deployment starting"
+          environment_url: "http://myapp.com"
+          deployment_id: ${{ steps.deployment.outputs.deployment_id }}
+      - name: Deploy my app
+        run: |
+          echo "I'm DEPLOYING!!!"
+          sleep 10
+
+  deployment_status:
+    name: Deployment Status
+    runs-on: ubuntu-latest
+    needs: [do_deployment]
+    if: always()
+    steps: 
+      - uses: martialonline/workflow-status@v2
+        id: check
+      - uses: chrnorm/deployment-status@releases/v1
+        with:
+          token: ${{ github.token }}
+          state: ${{ steps.check.outputs.status }}
+          deployment_id: ${{ steps.deployment.outputs.deployment_id }}
