@@ -1,0 +1,36 @@
+name: 'Hello World'
+description: 'Greet someone'
+inputs:
+  deploy_inputs:
+    description: 'JSON object string of the deployment workflow input'
+    required: true
+  additional_inputs:
+    description: 'JSON object string of custom inputs passed from the deploy callee'
+    required: false
+    default: '{"test":"test_value"}'
+#outputs:
+#  random-number:
+#    description: "Random number"
+#    value: ${{ steps.random-number-generator.outputs.random-id }}
+runs:
+  using: "composite"
+  steps:
+    - run: echo Hello World.
+      shell: bash
+    - name: Test JSON Merge
+      id: json_merge
+      uses: nickofthyme/object-remap@v1
+      with:
+        deploy: ${{ inputs.deploy_inputs }}
+        addtl: ${{ inputs.additional_inputs }}
+    - run: echo ${{ steps.json_merge }}
+      shell: bash
+#    - run: echo Hello ${{ inputs.who-to-greet }}.
+#      shell: bash
+#    - id: random-number-generator
+#      run: echo "::set-output name=random-id::$(echo $RANDOM)"
+#      shell: bash
+#    - run: echo "${{ github.action_path }}" >> $GITHUB_PATH
+#      shell: bash          
+#    - run: goodbye.sh
+#      shell: bash
