@@ -1,0 +1,42 @@
+name: Deploy v3
+
+on:
+  workflow_dispatch:
+
+jobs:
+
+  deploy_dev:
+    name: Deploy MyTestApp Dev
+    call-workflow:
+      uses: ./.github/workflows/common/deploy_service.yml
+      with:
+        serviceName: MyTestApp
+        serviceUrl: dev.MyTestApp.com
+        environment_name: dev
+        approval_environment: no_approval
+        app_sha: ${{ github.head_ref }}
+
+  deploy_stage:
+    name: Deploy MyTestApp Stage
+    needs: [deploy_dev]
+    call-workflow:
+      uses: ./.github/workflows/common/deploy_service.yml
+      with:
+        serviceName: MyTestApp
+        serviceUrl: stage.MyTestApp.com
+        environment_name: stage
+        approval_environment: dev_approval
+        app_sha: ${{ github.head_ref }}
+
+  deploy_prod:
+    name: Deploy MyTestApp Production
+    needs: [deploy_stage]
+    call-workflow:
+      uses: ./.github/workflows/common/deploy_service.yml
+      with:
+        serviceName: MyTestApp
+        serviceUrl: prod.MyTestApp.com
+        environment_name: production
+        approval_environment: qa_approval
+        app_sha: ${{ github.head_ref }}
+
