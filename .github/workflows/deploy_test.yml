@@ -1,0 +1,37 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    steps:
+    - name: start deployment
+      uses: bobheadxi/deployments@v0.6.2
+      id: deployment
+      with:
+        step: start
+        token: ${{ secrets.GITHUB_TOKEN }}
+        logs: "WHERE ARE MY LOGS?"
+        desc: "Testing my deployment"
+        env: production
+        no_override: true
+        ref: ${{ github.head_ref }}
+
+    - name: Deploy my app
+      run: |
+        echo "I'm DEPLOYING!!!"
+        sleep 10
+        # add your deployment code here
+
+    - name: update deployment status
+      uses: bobheadxi/deployments@v0.6.2
+      if: always()
+      with:
+        step: finish
+        token: ${{ secrets.GITHUB_TOKEN }}
+        logs: "WHERE ARE MY LOGS!?"
+        desc: "Finished my deployment"
+        status: ${{ job.status }}
+        deployment_id: ${{ steps.deployment.outputs.deployment_id }}
+        env_url: "http://bomb.com"
