@@ -1,0 +1,42 @@
+name: Deploy v3
+
+on:
+  workflow_dispatch:
+
+env:
+  TEST_ENV_FROM_SOURCE: "env_value"
+jobs:
+
+  deploy_dev:
+    name: Deploy MyTestApp Dev
+    uses: ./.github/workflows/deploy_service.yml
+    with:
+      deploy_env: dev
+      service_name: MyTestApp
+      service_url: "http://dev.MyTestApp.com"
+      approval_env: no_approval
+      app_sha: ${{ github.head_ref }}
+
+#  deploy_stage:
+#    name: Deploy MyTestApp Stage
+#    needs: [deploy_dev]
+#    uses: ./.github/workflows/deploy_service.yml
+#    with:
+#      deploy_env: stage
+#      service_name: MyTestApp
+#      service_url: "http://stage.MyTestApp.com"
+#      approval_env: dev_approval
+#      app_sha: ${{ github.head_ref }}
+#
+#  deploy_prod:
+#    name: Deploy MyTestApp Production
+#    needs: [deploy_stage]
+#    uses: ./.github/workflows/deploy_service.yml
+#    with:
+#      deploy_env: production
+#      service_name: MyTestApp
+#      service_url: "http://prod.MyTestApp.com"
+#      approval_env: qa_approval
+#      app_sha: ${{ github.head_ref }}
+#
+#
