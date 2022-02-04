@@ -1,0 +1,118 @@
+name: Deploy Service
+
+on:
+  workflow_call:
+    inputs:
+      service_name:
+        description: 'The name of the service being deployed'
+        required: true
+        type: string
+      service_url:
+        description: 'Http URL of the deployed service'
+        required: true
+        type: string
+      deploy_env:
+        description: 'The name of the deployment environment'
+        required: true
+        type: string
+      approval_env:
+        description: 'The name of the environment used for the approval step'
+        required: true
+        type: string
+      app_sha:
+        description: 'The git sha of the application to deploy'
+        required: true
+        type: string
+
+jobs:
+
+  approval:
+    name: Request approval
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.approval_env }}
+    outputs:
+      deployment_id: ${{ steps.deployment.outputs.deployment_id }}
+    steps:
+      - name: start deployment
+        uses: bobheadxi/deployments@v0.6.2
+        id: deployment
+        with:
+          step: start
+          token: ${{ secrets.GITHUB_TOKEN }}
+          logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          #desc: "Testing my deployment"
+          env: ${{ inputs.deploy_env }}
+          ref: ${{ inputs.app_sha }}
+
+  pre_deploy:
+    name: Pre-deployment
+    runs-on: ubuntu-latest
+    needs: [approval]
+    env:
+      PRE_DEPLOY_ACTION: './.github/actions/${{ inputs.deploy_env }}/pre_deploy'
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run local pre-deploy
+        uses: ${{ env.PRE_DEPLOY_ACTION }}
+
+        #- name: Find local pre-deploy
+        #  id: pred_deploy_action
+        #  uses: andstor/file-existence-action@v1
+        #  with:
+        #    files: './github/actions/${{ inputs.deploy_env }}/pre_deploy'
+        #- name: Run local pre-deploy action
+        #  if: steps.check_files.outputs.files_exists == 'true'
+        #  run: |
+        #      echo "TODO: Pre-deployment local!"
+        #- name: Run common pre-deployment action
+        #  if: steps.check_files.outputs.files_exists != 'true'
+        #  run: |
+        #      echo "TODO: Pre-deployment commons!"
+
+  deploy_app:
+    name: Deploying Application
+    runs-on: ubuntu-latest
+    needs: [pre_deploy]
+    steps:
+      - name: Deploy
+        run: |
+          echo "Deploying service!"
+          sleep 10
+
+  post_deploy:
+    name: Post-deployment
+    runs-on: ubuntu-latest
+    needs: [deploy_app]
+    steps:
+      - name: PostDeploy
+        run: |
+          echo "Validating service!"
+          sleep 10
+
+  deployment_status:
+    name: Deployment Status
+    runs-on: ubuntu-latest
+    needs: [approval, pre_deploy]
+    if: always()
+    steps: 
+      - uses: martialonline/workflow-status@v2
+        id: check
+      - name: update deployment status
+        uses: bobheadxi/deployments@v0.6.2
+        if: steps.check.outputs.status == 'cancelled'
+        with:
+          step: finish
+          token: ${{ secrets.GITHUB_TOKEN }}
+          status: inactive
+          logs: https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
+          deployment_id: ${{ needs.approval.outputs.deployment_id }}
+      - name: update deployment status
+        uses: bobheadxi/deployments@v0.6.2
+        if: steps.check.outputs.status != 'cancelled'
+        with:
+          step: finish
+          token: ${{ secrets.GITHUB_TOKEN }}
+          status: ${{ steps.check.outputs.status }}
+          logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          env_url: ${{ inputs.service_url }}
+          deployment_id: ${{ needs.approval.outputs.deployment_id }}
