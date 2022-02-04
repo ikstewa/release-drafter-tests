@@ -1,0 +1,56 @@
+name: Deploy v2
+
+on:
+  workflow_dispatch:
+
+jobs:
+
+  deployment:
+    name: Deploy Production
+    runs-on: ubuntu-latest
+    environment: qa_approval
+    outputs:
+      deployment_id: ${{ steps.deployment.outputs.deployment_id }}
+    steps:
+      - name: start deployment
+        uses: bobheadxi/deployments@v0.6.2
+        id: deployment
+        with:
+          step: start
+          token: ${{ secrets.GITHUB_TOKEN }}
+          logs: https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
+          desc: "Testing my deployment"
+          env: production
+          ref: ${{ github.head_ref }}
+      - name: Deploy my app
+        run: |
+          echo "I'm DEPLOYING!!!"
+          sleep 10
+
+  deployment_status:
+    name: Deployment Status
+    runs-on: ubuntu-latest
+    needs: [deployment]
+    if: always()
+    steps: 
+      - uses: martialonline/workflow-status@v2
+        id: check
+      - name: update deployment status
+        uses: bobheadxi/deployments@v0.6.2
+        if: steps.check.outputs.status == 'cancelled'
+        with:
+          step: finish
+          token: ${{ secrets.GITHUB_TOKEN }}
+          status: inactive
+          logs: https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
+          deployment_id: ${{ needs.deployment.outputs.deployment_id }}
+      - name: update deployment status
+        uses: bobheadxi/deployments@v0.6.2
+        if: steps.check.outputs.status != 'cancelled'
+        with:
+          step: finish
+          token: ${{ secrets.GITHUB_TOKEN }}
+          status: ${{ steps.check.outputs.status }}
+          logs: https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
+          env_url: "http://myapp.com"
+          deployment_id: ${{ needs.deployment.outputs.deployment_id }}
