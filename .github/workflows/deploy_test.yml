@@ -1,0 +1,78 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+
+jobs:
+
+  create_deployment:
+    name: Deploy Production
+    runs-on: ubuntu-latest
+    steps:
+    - name: start deployment
+      uses: bobheadxi/deployments@v0.6.2
+      id: deployment
+      with:
+        step: start
+        token: ${{ secrets.GITHUB_TOKEN }}
+        logs: "http://my.logs.com"
+        desc: "Testing my deployment"
+        env: production
+        no_override: true
+        ref: ${{ github.head_ref }}
+
+  request_approval:
+    name: Pending Approval
+    runs-on: ubuntu-latest
+    needs: create_deployment
+    environment: require_approval
+    steps:
+      - name: Approval Granted
+        run: |
+          echo "Approval granted"
+
+  do_deployment:
+    name: Deploy Production
+    needs: request_approval
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy my app
+        run: |
+          echo "I'm DEPLOYING!!!"
+          sleep 10
+          # add your deployment code here
+
+
+  pass_deployement:
+    name: Fail deployment
+    needs: do_deployment
+    runs-on: ubuntu-latest
+    steps:
+      - name: update deployment status
+        uses: bobheadxi/deployments@v0.6.2
+        if: always()
+        with:
+          step: finish
+          token: ${{ secrets.GITHUB_TOKEN }}
+          logs: "http://my.logs.com"
+          desc: "Finished my deployment"
+          status: success
+          deployment_id: ${{ steps.deployment.outputs.deployment_id }}
+          env_url: "http://bomb.com"
+  
+  fail_deployement:
+    name: Fail deployment
+    needs: do_deployment
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - name: update deployment status
+        uses: bobheadxi/deployments@v0.6.2
+        with:
+          step: finish
+          token: ${{ secrets.GITHUB_TOKEN }}
+          logs: "http://my.logs.com"
+          desc: "Finished my deployment"
+          status: failure
+          deployment_id: ${{ steps.deployment.outputs.deployment_id }}
+          env_url: "http://bomb.com"
