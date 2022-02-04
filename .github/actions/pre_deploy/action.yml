@@ -1,0 +1,73 @@
+name: 'Hello World'
+description: 'Greet someone'
+inputs:
+  source_inputs:
+    description: 'The name of the service being deployed'
+    required: true
+    type: string
+  source_env:
+    description: 'The name of the service being deployed'
+    required: true
+    type: string
+  source_secrets:
+    description: 'The name of the service being deployed'
+    required: true
+    type: string
+#  service_name:
+#    description: 'The name of the service being deployed'
+#    required: true
+#    type: string
+#  service_url:
+#    description: 'Http URL of the deployed service'
+#    required: true
+#    type: string
+#  deploy_env:
+#    description: 'The name of the deployment environment. Must be one of: dev, stage, prod'
+#    required: true
+#    type: string
+#  approval_env:
+#    description: 'The name of the environment used for the approval step'
+#    required: true
+#    type: string
+#  app_sha:
+#    description: 'The git sha of the application to deploy'
+#    required: true
+#    type: string
+#  additional_inputs:
+#    description: 'JSON object string of custom inputs passed from the deploy callee'
+#    required: false
+#    default: '{"test":"test_value"}'
+#outputs:
+#  random-number:
+#    description: "Random number"
+#    value: ${{ steps.random-number-generator.outputs.random-id }}
+runs:
+  using: "composite"
+  steps:
+    - run: echo Hello World.
+      shell: bash
+    - run: echo '${{ inputs.source_inputs }}'
+      shell: bash
+    - run: echo '${{ inputs.source_env }}'
+      shell: bash
+    - run: echo '${{ inputs.source_secrets }}'
+      shell: bash
+#      env:
+#        SERVICE_NAME: ${{ fromJSON(inputs.source_inputs).service_name }}
+#    - name: Test JSON Merge
+#      id: json_merge
+#      uses: nickofthyme/object-remap@v1
+#      with:
+#        data.*: ${{ inputs.deploy_inputs }}
+#        addtl: ${{ inputs.additional_inputs }}
+#    - run: echo ${{ steps.json_merge }}
+#      shell: bash
+#    - run: echo Hello ${{ inputs.who-to-greet }}.
+#      shell: bash
+#    - id: random-number-generator
+#      run: echo "::set-output name=random-id::$(echo $RANDOM)"
+#      shell: bash
+#    - run: echo "${{ github.action_path }}" >> $GITHUB_PATH
+#      shell: bash          
+#    - run: goodbye.sh
+#      shell: bash
